@@ -1,0 +1,30 @@
+begin
+	-- Populate a table with new events
+	for each row freshRow in alerts.status where
+				freshRow.ProcessReq = 0 and freshRow.Type in (1, 20)
+                                and freshRow.Severity > 0
+                                and freshRow.application in
+                                ( select application from alerts.applicationMap )
+	begin
+		insert into alerts.freshRow_events values ( freshRow.Identifier, freshRow.application );
+	end;
+
+	-- Set the Service and OpsTeam fields in freshRow_events using the info
+  -- from alerts.applicationMap
+	for each row map in alerts.applicationMap
+	begin
+		update alerts.freshRow_events set OpsTeam = map.OpsTeam, Service = map.Service where
+				application = map.application;
+	end;
+
+	-- Clear the resolved events
+	for each row freshRow in alerts.freshRow_events where freshRow.OpsTeam > ''
+	begin
+		update alerts.status via freshRow.Identifier set OpsTeam = freshRow.OpsTeam,
+                                                     Service = freshRow.Service,
+                                                     ProcessReq = 1;
+	end;
+
+	-- Remove all entries from the freshRows table
+	delete from alerts.freshRow_events;
+end
