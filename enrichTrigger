@@ -1,8 +1,8 @@
 begin
 	-- Populate a table with new events
 	for each row freshRow in alerts.status where
-				freshRow.ProcessReq = 0 and freshRow.Type in (1, 20)
-                                and freshRow.Severity > 0
+                                freshRow.Severity > 3
+                                and freshRow.ProcessReq = 0 
                                 and freshRow.application in
                                 ( select application from alerts.applicationMap )
 	begin
